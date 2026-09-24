@@ -48,11 +48,11 @@ class ChildServiceTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("user@example.com", null, List.of())
         );
-        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
     }
 
     @Test
     void listChildren_returnsAllChildrenForCurrentUser() {
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(childRepository.findAllByUser(user)).thenReturn(List.of(child));
 
         List<ChildResponse> result = childService.listChildren();
@@ -65,6 +65,7 @@ class ChildServiceTest {
 
     @Test
     void listChildren_whenNoChildren_returnsEmptyList() {
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(childRepository.findAllByUser(user)).thenReturn(List.of());
 
         assertThat(childService.listChildren()).isEmpty();
@@ -72,7 +73,7 @@ class ChildServiceTest {
 
     @Test
     void getChild_existingId_returnsChildResponse() {
-        when(childRepository.findByIdAndUser(10L, user)).thenReturn(Optional.of(child));
+        when(childRepository.findById(10L)).thenReturn(Optional.of(child));
 
         ChildResponse result = childService.getChild(10L);
 
@@ -82,7 +83,7 @@ class ChildServiceTest {
 
     @Test
     void getChild_nonExistingId_throwsResourceNotFoundException() {
-        when(childRepository.findByIdAndUser(999L, user)).thenReturn(Optional.empty());
+        when(childRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> childService.getChild(999L))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -90,15 +91,8 @@ class ChildServiceTest {
     }
 
     @Test
-    void getChild_otherUsersChild_throwsResourceNotFoundException() {
-        when(childRepository.findByIdAndUser(10L, user)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> childService.getChild(10L))
-                .isInstanceOf(ResourceNotFoundException.class);
-    }
-
-    @Test
     void createChild_savesEntityWithCurrentUserAndReturnsResponse() {
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(childRepository.save(any(Child.class))).thenAnswer(inv -> {
             Child saved = inv.getArgument(0);
             saved.setId(10L);
@@ -114,7 +108,7 @@ class ChildServiceTest {
 
     @Test
     void updateChild_existingId_updatesFieldsAndReturnsResponse() {
-        when(childRepository.findByIdAndUser(10L, user)).thenReturn(Optional.of(child));
+        when(childRepository.findById(10L)).thenReturn(Optional.of(child));
         when(childRepository.save(child)).thenReturn(child);
 
         ChildRequest updateRequest = new ChildRequest().firstName("Emily").lastName("Doe");
@@ -126,7 +120,7 @@ class ChildServiceTest {
 
     @Test
     void updateChild_nonExistingId_throwsResourceNotFoundException() {
-        when(childRepository.findByIdAndUser(999L, user)).thenReturn(Optional.empty());
+        when(childRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> childService.updateChild(999L, childRequest))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -135,7 +129,7 @@ class ChildServiceTest {
 
     @Test
     void deleteChild_existingId_deletesChild() {
-        when(childRepository.findByIdAndUser(10L, user)).thenReturn(Optional.of(child));
+        when(childRepository.findById(10L)).thenReturn(Optional.of(child));
 
         childService.deleteChild(10L);
 
@@ -144,7 +138,7 @@ class ChildServiceTest {
 
     @Test
     void deleteChild_nonExistingId_throwsResourceNotFoundException() {
-        when(childRepository.findByIdAndUser(999L, user)).thenReturn(Optional.empty());
+        when(childRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> childService.deleteChild(999L))
                 .isInstanceOf(ResourceNotFoundException.class)

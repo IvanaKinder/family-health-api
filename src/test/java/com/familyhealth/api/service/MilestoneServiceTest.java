@@ -9,15 +9,12 @@ import com.familyhealth.api.model.Milestone;
 import com.familyhealth.api.model.User;
 import com.familyhealth.api.repository.ChildRepository;
 import com.familyhealth.api.repository.MilestoneRepository;
-import com.familyhealth.api.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -34,35 +31,27 @@ class MilestoneServiceTest {
 
     @Mock private MilestoneRepository milestoneRepository;
     @Mock private ChildRepository childRepository;
-    @Mock private UserRepository userRepository;
 
     private final MilestoneMapper milestoneMapper = Mappers.getMapper(MilestoneMapper.class);
     private MilestoneService milestoneService;
 
-    private User user;
     private Child child;
     private Milestone milestone;
     private MilestoneRequest milestoneRequest;
 
     @BeforeEach
     void setUp() {
-        milestoneService = new MilestoneService(milestoneRepository, milestoneMapper, childRepository, userRepository);
+        milestoneService = new MilestoneService(milestoneRepository, milestoneMapper, childRepository);
 
-        user = User.builder().id(1L).email("user@example.com").build();
+        User user = User.builder().id(1L).email("user@example.com").build();
         child = Child.builder().id(10L).user(user).firstName("Emma").build();
         milestone = Milestone.builder().id(20L).child(child).title("First steps").date(LocalDate.of(2021, 6, 1)).build();
         milestoneRequest = new MilestoneRequest().title("First steps").date(LocalDate.of(2021, 6, 1));
-
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken("user@example.com", null, List.of())
-        );
-        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
     }
 
     @Test
-    void listMilestones_returnsMilestonesForOwnedChild() {
-        when(childRepository.findByIdAndUser(10L, user)).thenReturn(Optional.of(child));
-        when(milestoneRepository.findAllByChild(child)).thenReturn(List.of(milestone));
+    void listMilestones_returnsMilestonesForChild() {
+        when(milestoneRepository.findAllByChildId(10L)).thenReturn(List.of(milestone));
 
         List<MilestoneResponse> result = milestoneService.listMilestones(10L);
 
@@ -71,17 +60,8 @@ class MilestoneServiceTest {
     }
 
     @Test
-    void listMilestones_childNotOwned_throwsResourceNotFoundException() {
-        when(childRepository.findByIdAndUser(10L, user)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> milestoneService.listMilestones(10L))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("10");
-    }
-
-    @Test
     void createMilestone_savesWithChildAndReturnsResponse() {
-        when(childRepository.findByIdAndUser(10L, user)).thenReturn(Optional.of(child));
+        when(childRepository.findById(10L)).thenReturn(Optional.of(child));
         when(milestoneRepository.save(any(Milestone.class))).thenAnswer(inv -> {
             Milestone saved = inv.getArgument(0);
             saved.setId(20L);
@@ -96,8 +76,7 @@ class MilestoneServiceTest {
 
     @Test
     void updateMilestone_existingId_updatesFields() {
-        when(childRepository.findByIdAndUser(10L, user)).thenReturn(Optional.of(child));
-        when(milestoneRepository.findByIdAndChild(20L, child)).thenReturn(Optional.of(milestone));
+        when(milestoneRepository.findById(20L)).thenReturn(Optional.of(milestone));
         when(milestoneRepository.save(milestone)).thenReturn(milestone);
 
         MilestoneRequest updateRequest = new MilestoneRequest().title("First words").date(LocalDate.of(2021, 9, 1));
@@ -109,8 +88,7 @@ class MilestoneServiceTest {
 
     @Test
     void updateMilestone_milestoneNotFound_throwsResourceNotFoundException() {
-        when(childRepository.findByIdAndUser(10L, user)).thenReturn(Optional.of(child));
-        when(milestoneRepository.findByIdAndChild(999L, child)).thenReturn(Optional.empty());
+        when(milestoneRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> milestoneService.updateMilestone(10L, 999L, milestoneRequest))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -119,8 +97,7 @@ class MilestoneServiceTest {
 
     @Test
     void deleteMilestone_existingId_deletes() {
-        when(childRepository.findByIdAndUser(10L, user)).thenReturn(Optional.of(child));
-        when(milestoneRepository.findByIdAndChild(20L, child)).thenReturn(Optional.of(milestone));
+        when(milestoneRepository.findById(20L)).thenReturn(Optional.of(milestone));
 
         milestoneService.deleteMilestone(10L, 20L);
 
@@ -128,11 +105,11 @@ class MilestoneServiceTest {
     }
 
     @Test
-    void deleteMilestone_childNotOwned_throwsResourceNotFoundException() {
-        when(childRepository.findByIdAndUser(10L, user)).thenReturn(Optional.empty());
+    void deleteMilestone_milestoneNotFound_throwsResourceNotFoundException() {
+        when(milestoneRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> milestoneService.deleteMilestone(10L, 20L))
+        assertThatThrownBy(() -> milestoneService.deleteMilestone(10L, 999L))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("10");
+                .hasMessageContaining("999");
     }
 }

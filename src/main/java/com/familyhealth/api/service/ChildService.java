@@ -9,6 +9,7 @@ import com.familyhealth.api.model.User;
 import com.familyhealth.api.repository.ChildRepository;
 import com.familyhealth.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -29,8 +30,10 @@ public class ChildService {
                 .toList();
     }
 
+    @PreAuthorize("@childSecurity.isOwner(#id, authentication.name)")
     public ChildResponse getChild(Long id) {
-        return childMapper.toResponse(findOwnedChild(id));
+        return childMapper.toResponse(childRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Child", id)));
     }
 
     public ChildResponse createChild(ChildRequest request) {
@@ -39,19 +42,18 @@ public class ChildService {
         return childMapper.toResponse(childRepository.save(child));
     }
 
+    @PreAuthorize("@childSecurity.isOwner(#id, authentication.name)")
     public ChildResponse updateChild(Long id, ChildRequest request) {
-        Child child = findOwnedChild(id);
+        Child child = childRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Child", id));
         childMapper.updateEntity(request, child);
         return childMapper.toResponse(childRepository.save(child));
     }
 
+    @PreAuthorize("@childSecurity.isOwner(#id, authentication.name)")
     public void deleteChild(Long id) {
-        childRepository.delete(findOwnedChild(id));
-    }
-
-    private Child findOwnedChild(Long id) {
-        return childRepository.findByIdAndUser(id, getCurrentUser())
-                .orElseThrow(() -> new ResourceNotFoundException("Child", id));
+        childRepository.delete(childRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Child", id)));
     }
 
     private User getCurrentUser() {

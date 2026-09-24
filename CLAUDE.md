@@ -56,7 +56,10 @@ src/main/resources/
 ## Running the App
 
 ```bash
-# Dev (requires PostgreSQL running locally)
+# Start PostgreSQL via Docker (required for dev profile)
+docker-compose up -d
+
+# Dev
 SPRING_PROFILES_ACTIVE=dev mvn spring-boot:run
 
 # Tests (uses H2, no external DB needed)
@@ -64,6 +67,14 @@ mvn test
 
 # Full build
 mvn clean install
+```
+
+### Docker
+
+```bash
+docker-compose up -d    # start PostgreSQL in background
+docker-compose stop     # stop without losing data
+docker-compose down -v  # stop and wipe all data
 ```
 
 ## Swagger UI

@@ -33,6 +33,11 @@ src/main/resources/
 
 ## Key Conventions
 
+### Mapping
+- All mappings between layers (DTOs ↔ entities) must use **MapStruct** — never map fields manually
+- Mappers live in `src/main/java/com/familyhealth/api/mapper/` and use `@Mapper(componentModel = "spring")`
+- Fields that require custom logic (e.g. password encoding) should be **ignored** in the mapper and set explicitly in the service after mapping
+
 ### API & Controllers
 - The OpenAPI spec (`src/main/resources/openapi/family-health-api.yaml`) is the **source of truth** — define endpoints there first
 - Controllers are **delegate implementations only** — never write `@RestController` classes manually; implement the generated `*ApiDelegate` interface instead

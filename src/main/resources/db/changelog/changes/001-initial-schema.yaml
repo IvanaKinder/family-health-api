@@ -1,0 +1,185 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-users-table
+      author: familyhealth
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: password
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 001-create-children-table
+      author: familyhealth
+      changes:
+        - createTable:
+            tableName: children
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: date_of_birth
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: blood_type
+                  type: VARCHAR(20)
+              - column:
+                  name: social_security_number
+                  type: VARCHAR(50)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: children
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_children_user_id
+
+  - changeSet:
+      id: 001-create-milestones-table
+      author: familyhealth
+      changes:
+        - createTable:
+            tableName: milestones
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: child_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: notes
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: milestones
+            baseColumnNames: child_id
+            referencedTableName: children
+            referencedColumnNames: id
+            constraintName: fk_milestones_child_id
+
+  - changeSet:
+      id: 001-create-reminders-table
+      author: familyhealth
+      changes:
+        - createTable:
+            tableName: reminders
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: child_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: due_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: reminders
+            baseColumnNames: child_id
+            referencedTableName: children
+            referencedColumnNames: id
+            constraintName: fk_reminders_child_id

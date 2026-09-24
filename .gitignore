@@ -1,0 +1,41 @@
+# Build output
+target/
+
+# Compiled classes
+*.class
+
+# Package files
+*.jar
+*.war
+*.ear
+
+# IDE - IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# IDE - VS Code
+.vscode/
+*.code-workspace
+
+# IDE - Eclipse
+.eclipse/
+.classpath
+.project
+.settings/
+
+# Environment / secrets
+.env
+*.env.local
+
+# Logs
+*.log
+logs/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

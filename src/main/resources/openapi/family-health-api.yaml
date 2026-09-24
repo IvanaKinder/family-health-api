@@ -1,0 +1,467 @@
+openapi: 3.0.3
+info:
+  title: Family Health API
+  description: REST API for managing children's health records, milestones, and reminders
+  version: 1.0.0
+
+servers:
+  - url: /api/v1
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      security: []
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          description: Email already in use
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Authenticate and receive a JWT token
+      security: []
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+
+  /children:
+    get:
+      tags:
+        - Children
+      summary: List all children for the authenticated user
+      operationId: listChildren
+      responses:
+        '200':
+          description: List of children
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChildResponse'
+    post:
+      tags:
+        - Children
+      summary: Add a new child
+      operationId: createChild
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChildRequest'
+      responses:
+        '201':
+          description: Child created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChildResponse'
+
+  /children/{childId}:
+    parameters:
+      - name: childId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      tags:
+        - Children
+      summary: Get a child by ID
+      operationId: getChild
+      responses:
+        '200':
+          description: Child details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChildResponse'
+        '404':
+          description: Child not found
+    put:
+      tags:
+        - Children
+      summary: Update a child's details
+      operationId: updateChild
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChildRequest'
+      responses:
+        '200':
+          description: Child updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChildResponse'
+        '404':
+          description: Child not found
+    delete:
+      tags:
+        - Children
+      summary: Delete a child
+      operationId: deleteChild
+      responses:
+        '204':
+          description: Child deleted
+        '404':
+          description: Child not found
+
+  /children/{childId}/milestones:
+    parameters:
+      - name: childId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      tags:
+        - Milestones
+      summary: List milestones for a child
+      operationId: listMilestones
+      responses:
+        '200':
+          description: List of milestones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MilestoneResponse'
+    post:
+      tags:
+        - Milestones
+      summary: Add a milestone for a child
+      operationId: createMilestone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MilestoneRequest'
+      responses:
+        '201':
+          description: Milestone created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MilestoneResponse'
+
+  /children/{childId}/milestones/{milestoneId}:
+    parameters:
+      - name: childId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: milestoneId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    put:
+      tags:
+        - Milestones
+      summary: Update a milestone
+      operationId: updateMilestone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MilestoneRequest'
+      responses:
+        '200':
+          description: Milestone updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MilestoneResponse'
+        '404':
+          description: Milestone not found
+    delete:
+      tags:
+        - Milestones
+      summary: Delete a milestone
+      operationId: deleteMilestone
+      responses:
+        '204':
+          description: Milestone deleted
+        '404':
+          description: Milestone not found
+
+  /children/{childId}/reminders:
+    parameters:
+      - name: childId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      tags:
+        - Reminders
+      summary: List reminders for a child
+      operationId: listReminders
+      responses:
+        '200':
+          description: List of reminders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReminderResponse'
+    post:
+      tags:
+        - Reminders
+      summary: Add a reminder for a child
+      operationId: createReminder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReminderRequest'
+      responses:
+        '201':
+          description: Reminder created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderResponse'
+
+  /children/{childId}/reminders/{reminderId}:
+    parameters:
+      - name: childId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: reminderId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    put:
+      tags:
+        - Reminders
+      summary: Update a reminder
+      operationId: updateReminder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReminderRequest'
+      responses:
+        '200':
+          description: Reminder updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderResponse'
+        '404':
+          description: Reminder not found
+    delete:
+      tags:
+        - Reminders
+      summary: Delete a reminder
+      operationId: deleteReminder
+      responses:
+        '204':
+          description: Reminder deleted
+        '404':
+          description: Reminder not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - firstName
+        - lastName
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        firstName:
+          type: string
+        lastName:
+          type: string
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        tokenType:
+          type: string
+          default: Bearer
+
+    ChildRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - dateOfBirth
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        bloodType:
+          type: string
+          enum:
+            - A_POSITIVE
+            - A_NEGATIVE
+            - B_POSITIVE
+            - B_NEGATIVE
+            - AB_POSITIVE
+            - AB_NEGATIVE
+            - O_POSITIVE
+            - O_NEGATIVE
+        socialSecurityNumber:
+          type: string
+
+    ChildResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        firstName:
+          type: string
+        lastName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        bloodType:
+          type: string
+        socialSecurityNumber:
+          type: string
+
+    MilestoneRequest:
+      type: object
+      required:
+        - title
+        - date
+      properties:
+        title:
+          type: string
+        date:
+          type: string
+          format: date
+        notes:
+          type: string
+
+    MilestoneResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        date:
+          type: string
+          format: date
+        notes:
+          type: string
+
+    ReminderRequest:
+      type: object
+      required:
+        - title
+        - dueDate
+      properties:
+        title:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        description:
+          type: string
+
+    ReminderResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        description:
+          type: string

@@ -28,39 +28,39 @@ class SecurityConfigIntegrationTest {
 
     @Test
     void publicEndpoint_register_isNotBlocked() throws Exception {
-        mockMvc.perform(post("/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(result ->
                         assertNotEquals(401, result.getResponse().getStatus(),
-                                "Expected /auth/register to not return 401"))
+                                "Expected /api/v1/auth/register to not return 401"))
                 .andExpect(result ->
                         assertNotEquals(403, result.getResponse().getStatus(),
-                                "Expected /auth/register to not return 403"));
+                                "Expected /api/v1/auth/register to not return 403"));
     }
 
     @Test
     void publicEndpoint_login_isNotBlocked() throws Exception {
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(result ->
                         assertNotEquals(401, result.getResponse().getStatus(),
-                                "Expected /auth/login to not return 401"))
+                                "Expected /api/v1/auth/login to not return 401"))
                 .andExpect(result ->
                         assertNotEquals(403, result.getResponse().getStatus(),
-                                "Expected /auth/login to not return 403"));
+                                "Expected /api/v1/auth/login to not return 403"));
     }
 
     @Test
     void protectedEndpoint_withoutToken_returns401() throws Exception {
-        mockMvc.perform(get("/children"))
+        mockMvc.perform(get("/api/v1/children"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void protectedEndpoint_withMalformedToken_returns401() throws Exception {
-        mockMvc.perform(get("/children")
+        mockMvc.perform(get("/api/v1/children")
                         .header("Authorization", "Bearer this.is.not.a.valid.jwt"))
                 .andExpect(status().isUnauthorized());
     }
@@ -75,7 +75,7 @@ class SecurityConfigIntegrationTest {
                         "test-secret-key-must-be-at-least-32-chars!!".getBytes(StandardCharsets.UTF_8)))
                 .compact();
 
-        mockMvc.perform(get("/children")
+        mockMvc.perform(get("/api/v1/children")
                         .header("Authorization", "Bearer " + expiredToken))
                 .andExpect(status().isUnauthorized());
     }

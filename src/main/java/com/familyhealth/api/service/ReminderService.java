@@ -1,19 +1,19 @@
 package com.familyhealth.api.service;
 
-import com.familyhealth.api.generated.model.ReminderPage;
-import com.familyhealth.api.generated.model.ReminderRequest;
-import com.familyhealth.api.generated.model.ReminderResponse;
+import com.familyhealth.api.service.model.ReminderCommand;
+import com.familyhealth.api.service.model.ReminderView;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 
 public interface ReminderService {
 
-    ReminderPage listReminders(Long childId, LocalDate fromDate, LocalDate toDate, Pageable pageable);
+    Page<ReminderView> listReminders(Long childId, LocalDate fromDate, LocalDate toDate, Pageable pageable);
 
-    ReminderResponse createReminder(Long childId, ReminderRequest request);
+    ReminderView createReminder(Long childId, ReminderCommand command);
 
-    ReminderResponse updateReminder(Long childId, Long reminderId, ReminderRequest request);
+    ReminderView updateReminder(Long childId, Long reminderId, ReminderCommand command);
 
     void deleteReminder(Long childId, Long reminderId);
 }

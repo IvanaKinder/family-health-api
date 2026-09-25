@@ -1,18 +1,18 @@
 package com.familyhealth.api.service;
 
 import com.familyhealth.api.exception.DuplicateEmailException;
-import com.familyhealth.api.generated.model.LoginRequest;
-import com.familyhealth.api.generated.model.RegisterRequest;
 import com.familyhealth.api.mapper.UserMapper;
 import com.familyhealth.api.model.User;
 import com.familyhealth.api.repository.UserRepository;
+import com.familyhealth.api.service.model.LoginCommand;
+import com.familyhealth.api.service.model.RegisterCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -28,30 +28,30 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public String register(RegisterRequest request) {
-        log.info("Registering user: {}", request.getEmail());
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateEmailException(request.getEmail());
+    public String register(RegisterCommand command) {
+        log.info("Registering user: {}", command.email());
+        if (userRepository.existsByEmail(command.email())) {
+            throw new DuplicateEmailException(command.email());
         }
 
-        User user = userMapper.toEntity(request);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        User user = userMapper.toEntity(command);
+        user.setPassword(passwordEncoder.encode(command.password()));
 
         userRepository.save(user);
         return jwtService.generateToken(user);
     }
 
     @Override
-    public String login(LoginRequest request) {
-        log.info("Login attempt: {}", request.getEmail());
+    public String login(LoginCommand command) {
+        log.info("Login attempt: {}", command.email());
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(command.email(), command.password())
         );
 
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(command.email())
                 .orElseThrow();
 
-        log.info("Login successful: {}", request.getEmail());
+        log.info("Login successful: {}", command.email());
         return jwtService.generateToken(user);
     }
 }

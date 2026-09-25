@@ -1,19 +1,19 @@
 package com.familyhealth.api.service;
 
-import com.familyhealth.api.generated.model.MilestonePage;
-import com.familyhealth.api.generated.model.MilestoneRequest;
-import com.familyhealth.api.generated.model.MilestoneResponse;
+import com.familyhealth.api.service.model.MilestoneCommand;
+import com.familyhealth.api.service.model.MilestoneView;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface MilestoneService {
 
-    MilestonePage listMilestones(Long childId, Pageable pageable);
+    Page<MilestoneView> listMilestones(Long childId, Pageable pageable);
 
-    MilestoneResponse getMilestone(Long childId, Long milestoneId);
+    MilestoneView getMilestone(Long childId, Long milestoneId);
 
-    MilestoneResponse createMilestone(Long childId, MilestoneRequest request);
+    MilestoneView createMilestone(Long childId, MilestoneCommand command);
 
-    MilestoneResponse updateMilestone(Long childId, Long milestoneId, MilestoneRequest request);
+    MilestoneView updateMilestone(Long childId, Long milestoneId, MilestoneCommand command);
 
     void deleteMilestone(Long childId, Long milestoneId);
 }

@@ -1,19 +1,18 @@
 package com.familyhealth.api.service;
 
 import com.familyhealth.api.exception.ResourceNotFoundException;
-import com.familyhealth.api.generated.model.MilestonePage;
-import com.familyhealth.api.generated.model.MilestoneRequest;
-import com.familyhealth.api.generated.model.MilestoneResponse;
 import com.familyhealth.api.mapper.MilestoneMapper;
 import com.familyhealth.api.model.Milestone;
 import com.familyhealth.api.repository.ChildRepository;
 import com.familyhealth.api.repository.MilestoneRepository;
+import com.familyhealth.api.service.model.MilestoneCommand;
+import com.familyhealth.api.service.model.MilestoneView;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -26,43 +25,38 @@ public class MilestoneServiceImpl implements MilestoneService {
     private final ChildRepository childRepository;
 
     @Override
-    @PreAuthorize("@childSecurity.isOwner(#childId, authentication.name)")
-    public MilestonePage listMilestones(Long childId, Pageable pageable) {
-        return milestoneMapper.toPage(milestoneRepository.findAllByChildId(childId, pageable));
+    public Page<MilestoneView> listMilestones(Long childId, Pageable pageable) {
+        return milestoneRepository.findAllByChildId(childId, pageable).map(milestoneMapper::toView);
     }
 
     @Override
-    @PreAuthorize("@childSecurity.isOwner(#childId, authentication.name)")
-    public MilestoneResponse getMilestone(Long childId, Long milestoneId) {
-        return milestoneMapper.toResponse(milestoneRepository.findById(milestoneId)
+    public MilestoneView getMilestone(Long childId, Long milestoneId) {
+        return milestoneMapper.toView(milestoneRepository.findById(milestoneId)
                 .orElseThrow(() -> new ResourceNotFoundException("Milestone", milestoneId)));
     }
 
     @Override
     @Transactional
-    @PreAuthorize("@childSecurity.isOwner(#childId, authentication.name)")
-    public MilestoneResponse createMilestone(Long childId, MilestoneRequest request) {
-        log.info("Creating milestone '{}' for child id: {}", request.getTitle(), childId);
-        Milestone milestone = milestoneMapper.toEntity(request);
+    public MilestoneView createMilestone(Long childId, MilestoneCommand command) {
+        log.info("Creating milestone '{}' for child id: {}", command.title(), childId);
+        Milestone milestone = milestoneMapper.toEntity(command);
         milestone.setChild(childRepository.findById(childId)
                 .orElseThrow(() -> new ResourceNotFoundException("Child", childId)));
-        return milestoneMapper.toResponse(milestoneRepository.save(milestone));
+        return milestoneMapper.toView(milestoneRepository.save(milestone));
     }
 
     @Override
     @Transactional
-    @PreAuthorize("@milestoneSecurity.isOwner(#milestoneId, #childId, authentication.name)")
-    public MilestoneResponse updateMilestone(Long childId, Long milestoneId, MilestoneRequest request) {
+    public MilestoneView updateMilestone(Long childId, Long milestoneId, MilestoneCommand command) {
         log.info("Updating milestone id: {}", milestoneId);
         Milestone milestone = milestoneRepository.findById(milestoneId)
                 .orElseThrow(() -> new ResourceNotFoundException("Milestone", milestoneId));
-        milestoneMapper.updateEntity(request, milestone);
-        return milestoneMapper.toResponse(milestoneRepository.save(milestone));
+        milestoneMapper.updateEntity(command, milestone);
+        return milestoneMapper.toView(milestoneRepository.save(milestone));
     }
 
     @Override
     @Transactional
-    @PreAuthorize("@milestoneSecurity.isOwner(#milestoneId, #childId, authentication.name)")
     public void deleteMilestone(Long childId, Long milestoneId) {
         log.info("Deleting milestone id: {}", milestoneId);
         milestoneRepository.delete(milestoneRepository.findById(milestoneId)

@@ -4,6 +4,8 @@ import com.familyhealth.api.generated.model.ChildPage;
 import com.familyhealth.api.generated.model.ChildRequest;
 import com.familyhealth.api.generated.model.ChildResponse;
 import com.familyhealth.api.model.Child;
+import com.familyhealth.api.service.model.ChildCommand;
+import com.familyhealth.api.service.model.ChildView;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -12,19 +14,23 @@ import org.springframework.data.domain.Page;
 @Mapper(componentModel = "spring")
 public interface ChildMapper {
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "user", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    Child toEntity(ChildRequest request);
+    ChildCommand toCommand(ChildRequest request);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    void updateEntity(ChildRequest request, @MappingTarget Child child);
+    Child toEntity(ChildCommand command);
 
-    ChildResponse toResponse(Child child);
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    void updateEntity(ChildCommand command, @MappingTarget Child child);
 
-    default ChildPage toPage(Page<Child> page) {
+    ChildView toView(Child child);
+
+    ChildResponse toResponse(ChildView view);
+
+    default ChildPage toPage(Page<ChildView> page) {
         return new ChildPage()
                 .content(page.getContent().stream().map(this::toResponse).toList())
                 .page(page.getNumber())

@@ -1,20 +1,21 @@
 package com.familyhealth.api.service;
 
 import com.familyhealth.api.exception.ResourceNotFoundException;
-import com.familyhealth.api.generated.model.MilestoneRequest;
-import com.familyhealth.api.generated.model.MilestoneResponse;
 import com.familyhealth.api.mapper.MilestoneMapper;
 import com.familyhealth.api.model.Child;
 import com.familyhealth.api.model.Milestone;
 import com.familyhealth.api.model.User;
 import com.familyhealth.api.repository.ChildRepository;
 import com.familyhealth.api.repository.MilestoneRepository;
+import com.familyhealth.api.service.model.MilestoneCommand;
+import com.familyhealth.api.service.model.MilestoneView;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,7 +42,7 @@ class MilestoneServiceTest {
 
     private Child child;
     private Milestone milestone;
-    private MilestoneRequest milestoneRequest;
+    private MilestoneCommand milestoneCommand;
 
     @BeforeEach
     void setUp() {
@@ -50,7 +51,7 @@ class MilestoneServiceTest {
         User user = User.builder().id(1L).email("user@example.com").build();
         child = Child.builder().id(10L).user(user).firstName("Emma").build();
         milestone = Milestone.builder().id(20L).child(child).title("First steps").date(LocalDate.of(2021, 6, 1)).build();
-        milestoneRequest = new MilestoneRequest().title("First steps").date(LocalDate.of(2021, 6, 1));
+        milestoneCommand = new MilestoneCommand("First steps", LocalDate.of(2021, 6, 1), null);
     }
 
     @Test
@@ -58,15 +59,15 @@ class MilestoneServiceTest {
         Pageable pageable = PageRequest.of(0, 20);
         when(milestoneRepository.findAllByChildId(eq(10L), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(milestone), pageable, 1));
 
-        var result = milestoneService.listMilestones(10L, pageable);
+        Page<MilestoneView> result = milestoneService.listMilestones(10L, pageable);
 
         assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().getFirst().getTitle()).isEqualTo("First steps");
+        assertThat(result.getContent().getFirst().title()).isEqualTo("First steps");
         assertThat(result.getTotalElements()).isEqualTo(1L);
     }
 
     @Test
-    void createMilestone_savesWithChildAndReturnsResponse() {
+    void createMilestone_savesWithChildAndReturnsView() {
         when(childRepository.findById(10L)).thenReturn(Optional.of(child));
         when(milestoneRepository.save(any(Milestone.class))).thenAnswer(inv -> {
             Milestone saved = inv.getArgument(0);
@@ -74,9 +75,9 @@ class MilestoneServiceTest {
             return saved;
         });
 
-        MilestoneResponse result = milestoneService.createMilestone(10L, milestoneRequest);
+        MilestoneView result = milestoneService.createMilestone(10L, milestoneCommand);
 
-        assertThat(result.getTitle()).isEqualTo("First steps");
+        assertThat(result.title()).isEqualTo("First steps");
         verify(milestoneRepository).save(any(Milestone.class));
     }
 
@@ -85,10 +86,10 @@ class MilestoneServiceTest {
         when(milestoneRepository.findById(20L)).thenReturn(Optional.of(milestone));
         when(milestoneRepository.save(milestone)).thenReturn(milestone);
 
-        MilestoneRequest updateRequest = new MilestoneRequest().title("First words").date(LocalDate.of(2021, 9, 1));
-        MilestoneResponse result = milestoneService.updateMilestone(10L, 20L, updateRequest);
+        MilestoneCommand updateCommand = new MilestoneCommand("First words", LocalDate.of(2021, 9, 1), null);
+        MilestoneView result = milestoneService.updateMilestone(10L, 20L, updateCommand);
 
-        assertThat(result.getTitle()).isEqualTo("First words");
+        assertThat(result.title()).isEqualTo("First words");
         verify(milestoneRepository).save(milestone);
     }
 
@@ -96,7 +97,7 @@ class MilestoneServiceTest {
     void updateMilestone_milestoneNotFound_throwsResourceNotFoundException() {
         when(milestoneRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> milestoneService.updateMilestone(10L, 999L, milestoneRequest))
+        assertThatThrownBy(() -> milestoneService.updateMilestone(10L, 999L, milestoneCommand))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("999");
     }

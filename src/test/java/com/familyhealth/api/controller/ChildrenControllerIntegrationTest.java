@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.time.LocalDate;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -75,6 +76,14 @@ class ChildrenControllerIntegrationTest {
                 .andExpect(jsonPath("$.firstName").value("Emma"))
                 .andExpect(jsonPath("$.lastName").value("Doe"))
                 .andExpect(jsonPath("$.id").isNumber());
+
+        assertThat(reminderRepository.findAll())
+                .hasSize(1)
+                .first()
+                .satisfies(r -> {
+                    assertThat(r.getTitle()).contains("Emma");
+                    assertThat(r.getDueDate()).isEqualTo(LocalDate.of(2021, 3, 10));
+                });
     }
 
     @Test

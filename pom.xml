@@ -166,6 +166,10 @@
                             <artifactId>mapstruct-processor</artifactId>
                             <version>${mapstruct.version}</version>
                         </path>
+                        <path>
+                            <groupId>org.hibernate.orm</groupId>
+                            <artifactId>hibernate-jpamodelgen</artifactId>
+                        </path>
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>

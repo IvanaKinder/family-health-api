@@ -243,6 +243,19 @@ paths:
         - Reminders
       summary: List reminders for a child
       operationId: listReminders
+      parameters:
+        - name: fromDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
       responses:
         '200':
           description: List of reminders

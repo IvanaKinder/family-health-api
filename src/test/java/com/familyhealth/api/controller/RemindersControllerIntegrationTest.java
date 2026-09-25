@@ -101,6 +101,42 @@ class RemindersControllerIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    void listReminders_withFromDate_returnsOnlyRemindersOnOrAfter() throws Exception {
+        createReminderWithDate("2024-02-01");
+        createReminderWithDate("2024-03-15");
+        createReminderWithDate("2024-04-01");
+
+        mockMvc.perform(get(remindersUrl(childId)).param("fromDate", "2024-03-15"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @Test
+    void listReminders_withToDate_returnsOnlyRemindersOnOrBefore() throws Exception {
+        createReminderWithDate("2024-02-01");
+        createReminderWithDate("2024-03-15");
+        createReminderWithDate("2024-04-01");
+
+        mockMvc.perform(get(remindersUrl(childId)).param("toDate", "2024-03-15"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @Test
+    void listReminders_withBothDates_returnsOnlyRemindersInRange() throws Exception {
+        createReminderWithDate("2024-02-01");
+        createReminderWithDate("2024-03-15");
+        createReminderWithDate("2024-04-01");
+
+        mockMvc.perform(get(remindersUrl(childId))
+                        .param("fromDate", "2024-03-01")
+                        .param("toDate", "2024-03-31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].dueDate").value("2024-03-15"));
+    }
+
     // --- helpers ---
 
     private String remindersUrl(long cId) {
@@ -120,4 +156,10 @@ class RemindersControllerIntegrationTest {
         return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asLong();
     }
 
+    private void createReminderWithDate(String dueDate) throws Exception {
+        mockMvc.perform(post(remindersUrl(childId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("title", "Reminder", "dueDate", dueDate))))
+                .andExpect(status().isCreated());
+    }
 }

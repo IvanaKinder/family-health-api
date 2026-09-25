@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -18,8 +19,8 @@ public class RemindersApiDelegateImpl implements RemindersApiDelegate {
     private final ReminderService reminderService;
 
     @Override
-    public ResponseEntity<List<ReminderResponse>> listReminders(Long childId) {
-        return ResponseEntity.ok(reminderService.listReminders(childId));
+    public ResponseEntity<List<ReminderResponse>> listReminders(Long childId, LocalDate fromDate, LocalDate toDate) {
+        return ResponseEntity.ok(reminderService.listReminders(childId, fromDate, toDate));
     }
 
     @Override

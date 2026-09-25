@@ -9,6 +9,7 @@ import com.familyhealth.api.model.Reminder;
 import com.familyhealth.api.model.User;
 import com.familyhealth.api.repository.ChildRepository;
 import com.familyhealth.api.repository.ReminderRepository;
+import com.familyhealth.api.specification.ReminderSpecification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,10 +51,10 @@ class ReminderServiceTest {
     }
 
     @Test
-    void listReminders_returnsRemindersForChild() {
-        when(reminderRepository.findAllByChildId(10L)).thenReturn(List.of(reminder));
+    void listReminders_noFilter_returnsAllRemindersForChild() {
+        when(reminderRepository.findAll(any(ReminderSpecification.class))).thenReturn(List.of(reminder));
 
-        List<ReminderResponse> result = reminderService.listReminders(10L);
+        List<ReminderResponse> result = reminderService.listReminders(10L, null, null);
 
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().getTitle()).isEqualTo("Dentist");

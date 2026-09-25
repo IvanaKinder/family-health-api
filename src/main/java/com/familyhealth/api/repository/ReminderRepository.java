@@ -2,13 +2,9 @@ package com.familyhealth.api.repository;
 
 import com.familyhealth.api.model.Reminder;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import java.util.List;
-import java.util.Optional;
-
-public interface ReminderRepository extends JpaRepository<Reminder, Long> {
-
-    List<Reminder> findAllByChildId(Long childId);
+public interface ReminderRepository extends JpaRepository<Reminder, Long>, JpaSpecificationExecutor<Reminder> {
 
     boolean existsByIdAndChild_IdAndChild_User_Email(Long id, Long childId, String email);
 }

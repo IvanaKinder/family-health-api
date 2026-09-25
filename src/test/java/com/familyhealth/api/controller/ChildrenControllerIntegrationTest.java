@@ -1,6 +1,8 @@
 package com.familyhealth.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.familyhealth.api.model.Child;
+import com.familyhealth.api.model.User;
 import com.familyhealth.api.repository.ChildRepository;
 import com.familyhealth.api.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,10 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -22,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@WithMockUser(username = "user@example.com")
 class ChildrenControllerIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
@@ -30,18 +36,19 @@ class ChildrenControllerIntegrationTest {
     @Autowired private ChildRepository childRepository;
 
     private static final String CHILDREN_URL = "/api/v1/children";
-    private String jwt;
+    private User user;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         childRepository.deleteAll();
         userRepository.deleteAll();
-        jwt = registerAndLogin("user@example.com", "password123");
+        user = userRepository.save(User.builder()
+                .email("user@example.com").password("test").firstName("Test").lastName("User").build());
     }
 
     @Test
     void listChildren_authenticated_returnsEmptyList() throws Exception {
-        mockMvc.perform(get(CHILDREN_URL).header("Authorization", "Bearer " + jwt))
+        mockMvc.perform(get(CHILDREN_URL))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(0));
@@ -50,7 +57,6 @@ class ChildrenControllerIntegrationTest {
     @Test
     void createChild_withValidPayload_returns201() throws Exception {
         mockMvc.perform(post(CHILDREN_URL)
-                        .header("Authorization", "Bearer " + jwt)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validChildPayload())))
                 .andExpect(status().isCreated())
@@ -63,14 +69,14 @@ class ChildrenControllerIntegrationTest {
     void getChild_existingId_returns200() throws Exception {
         long id = createChild();
 
-        mockMvc.perform(get(CHILDREN_URL + "/" + id).header("Authorization", "Bearer " + jwt))
+        mockMvc.perform(get(CHILDREN_URL + "/" + id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id));
     }
 
     @Test
     void getChild_nonExistingId_returns404() throws Exception {
-        mockMvc.perform(get(CHILDREN_URL + "/999").header("Authorization", "Bearer " + jwt))
+        mockMvc.perform(get(CHILDREN_URL + "/999"))
                 .andExpect(status().isNotFound());
     }
 
@@ -78,16 +84,10 @@ class ChildrenControllerIntegrationTest {
     void updateChild_withValidPayload_returns200() throws Exception {
         long id = createChild();
 
-        Map<String, String> updated = Map.of(
-                "firstName", "Emily",
-                "lastName", "Doe",
-                "dateOfBirth", "2020-05-15"
-        );
-
         mockMvc.perform(put(CHILDREN_URL + "/" + id)
-                        .header("Authorization", "Bearer " + jwt)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updated)))
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "firstName", "Emily", "lastName", "Doe", "dateOfBirth", "2020-05-15"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("Emily"));
     }
@@ -96,21 +96,24 @@ class ChildrenControllerIntegrationTest {
     void deleteChild_existingId_returns204() throws Exception {
         long id = createChild();
 
-        mockMvc.perform(delete(CHILDREN_URL + "/" + id).header("Authorization", "Bearer " + jwt))
+        mockMvc.perform(delete(CHILDREN_URL + "/" + id))
                 .andExpect(status().isNoContent());
     }
 
     @Test
+    @WithMockUser(username = "other@example.com")
     void getChild_otherUsersChild_returns404() throws Exception {
-        long id = createChild();
+        // Create child owned by user@example.com directly via repository
+        Child child = childRepository.save(Child.builder()
+                .user(user).firstName("Emma").lastName("Doe")
+                .dateOfBirth(LocalDate.of(2020, 3, 10)).build());
 
-        String otherJwt = registerAndLogin("other@example.com", "password123");
-
-        mockMvc.perform(get(CHILDREN_URL + "/" + id).header("Authorization", "Bearer " + otherJwt))
+        mockMvc.perform(get(CHILDREN_URL + "/" + child.getId()))
                 .andExpect(status().isNotFound());
     }
 
     @Test
+    @WithAnonymousUser
     void listChildren_withoutToken_returns401() throws Exception {
         mockMvc.perform(get(CHILDREN_URL))
                 .andExpect(status().isUnauthorized());
@@ -119,45 +122,15 @@ class ChildrenControllerIntegrationTest {
     // --- helpers ---
 
     private Map<String, String> validChildPayload() {
-        return Map.of(
-                "firstName", "Emma",
-                "lastName", "Doe",
-                "dateOfBirth", "2020-03-10"
-        );
+        return Map.of("firstName", "Emma", "lastName", "Doe", "dateOfBirth", "2020-03-10");
     }
 
     private long createChild() throws Exception {
         MvcResult result = mockMvc.perform(post(CHILDREN_URL)
-                        .header("Authorization", "Bearer " + jwt)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validChildPayload())))
                 .andExpect(status().isCreated())
                 .andReturn();
-
-        return objectMapper.readTree(result.getResponse().getContentAsString())
-                .get("id").asLong();
-    }
-
-    private String registerAndLogin(String email, String password) throws Exception {
-        Map<String, String> registerPayload = Map.of(
-                "email", email,
-                "password", password,
-                "firstName", "Test",
-                "lastName", "User"
-        );
-
-        mockMvc.perform(post("/api/v1/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registerPayload)))
-                .andExpect(status().isCreated());
-
-        MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("email", email, "password", password))))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        return objectMapper.readTree(loginResult.getResponse().getContentAsString())
-                .get("token").asText();
+        return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asLong();
     }
 }

@@ -1,6 +1,8 @@
 package com.familyhealth.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.familyhealth.api.model.Child;
+import com.familyhealth.api.model.User;
 import com.familyhealth.api.repository.ChildRepository;
 import com.familyhealth.api.repository.ReminderRepository;
 import com.familyhealth.api.repository.UserRepository;
@@ -10,10 +12,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -23,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@WithMockUser(username = "user@example.com")
 class RemindersControllerIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
@@ -31,21 +37,22 @@ class RemindersControllerIntegrationTest {
     @Autowired private ChildRepository childRepository;
     @Autowired private ReminderRepository reminderRepository;
 
-    private String jwt;
     private long childId;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         reminderRepository.deleteAll();
         childRepository.deleteAll();
         userRepository.deleteAll();
-        jwt = registerAndLogin("user@example.com", "password123");
-        childId = createChild(jwt);
+        User user = userRepository.save(User.builder()
+                .email("user@example.com").password("test").firstName("Test").lastName("User").build());
+        childId = childRepository.save(Child.builder()
+                .user(user).firstName("Emma").lastName("Doe").dateOfBirth(LocalDate.of(2020, 3, 10)).build()).getId();
     }
 
     @Test
     void listReminders_returnsEmptyList() throws Exception {
-        mockMvc.perform(get(remindersUrl(childId)).header("Authorization", "Bearer " + jwt))
+        mockMvc.perform(get(remindersUrl(childId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(0));
@@ -54,7 +61,6 @@ class RemindersControllerIntegrationTest {
     @Test
     void createReminder_returns201() throws Exception {
         mockMvc.perform(post(remindersUrl(childId))
-                        .header("Authorization", "Bearer " + jwt)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validReminderPayload())))
                 .andExpect(status().isCreated())
@@ -64,36 +70,32 @@ class RemindersControllerIntegrationTest {
 
     @Test
     void updateReminder_returns200() throws Exception {
-        long reminderId = createReminder(childId, jwt);
-
-        Map<String, String> updated = Map.of("title", "Eye doctor", "dueDate", "2024-04-01");
+        long reminderId = createReminder();
 
         mockMvc.perform(put(remindersUrl(childId) + "/" + reminderId)
-                        .header("Authorization", "Bearer " + jwt)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updated)))
+                        .content(objectMapper.writeValueAsString(Map.of("title", "Eye doctor", "dueDate", "2024-04-01"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Eye doctor"));
     }
 
     @Test
     void deleteReminder_returns204() throws Exception {
-        long reminderId = createReminder(childId, jwt);
+        long reminderId = createReminder();
 
-        mockMvc.perform(delete(remindersUrl(childId) + "/" + reminderId)
-                        .header("Authorization", "Bearer " + jwt))
+        mockMvc.perform(delete(remindersUrl(childId) + "/" + reminderId))
                 .andExpect(status().isNoContent());
     }
 
     @Test
+    @WithMockUser(username = "other@example.com")
     void remindersOnOtherUsersChild_returns404() throws Exception {
-        String otherJwt = registerAndLogin("other@example.com", "password123");
-
-        mockMvc.perform(get(remindersUrl(childId)).header("Authorization", "Bearer " + otherJwt))
+        mockMvc.perform(get(remindersUrl(childId)))
                 .andExpect(status().isNotFound());
     }
 
     @Test
+    @WithAnonymousUser
     void withoutToken_returns401() throws Exception {
         mockMvc.perform(get(remindersUrl(childId)))
                 .andExpect(status().isUnauthorized());
@@ -109,9 +111,8 @@ class RemindersControllerIntegrationTest {
         return Map.of("title", "Dentist", "dueDate", "2024-03-15");
     }
 
-    private long createReminder(long cId, String token) throws Exception {
-        MvcResult result = mockMvc.perform(post(remindersUrl(cId))
-                        .header("Authorization", "Bearer " + token)
+    private long createReminder() throws Exception {
+        MvcResult result = mockMvc.perform(post(remindersUrl(childId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validReminderPayload())))
                 .andExpect(status().isCreated())
@@ -119,30 +120,4 @@ class RemindersControllerIntegrationTest {
         return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asLong();
     }
 
-    private long createChild(String token) throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/v1/children")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of(
-                                "firstName", "Emma", "lastName", "Doe", "dateOfBirth", "2020-03-10"))))
-                .andExpect(status().isCreated())
-                .andReturn();
-        return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asLong();
-    }
-
-    private String registerAndLogin(String email, String password) throws Exception {
-        mockMvc.perform(post("/api/v1/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of(
-                                "email", email, "password", password, "firstName", "Test", "lastName", "User"))))
-                .andExpect(status().isCreated());
-
-        MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("email", email, "password", password))))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        return objectMapper.readTree(result.getResponse().getContentAsString()).get("token").asText();
-    }
 }

@@ -1,6 +1,7 @@
 package com.familyhealth.api.config;
 
 import com.familyhealth.api.security.JwtAuthFilter;
+import com.familyhealth.api.security.RequestLoggingFilter;
 import com.familyhealth.api.security.UserDetailsServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final RequestLoggingFilter requestLoggingFilter;
     private final UserDetailsServiceImpl userDetailsService;
 
     @Bean
@@ -46,6 +48,7 @@ public class SecurityConfig {
                                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(requestLoggingFilter, JwtAuthFilter.class)
                 .build();
     }
 

@@ -9,10 +9,12 @@ import com.familyhealth.api.model.Milestone;
 import com.familyhealth.api.repository.ChildRepository;
 import com.familyhealth.api.repository.MilestoneRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MilestoneServiceImpl implements MilestoneService {
@@ -37,6 +39,7 @@ public class MilestoneServiceImpl implements MilestoneService {
     @Override
     @PreAuthorize("@childSecurity.isOwner(#childId, authentication.name)")
     public MilestoneResponse createMilestone(Long childId, MilestoneRequest request) {
+        log.info("Creating milestone '{}' for child id: {}", request.getTitle(), childId);
         Milestone milestone = milestoneMapper.toEntity(request);
         milestone.setChild(childRepository.findById(childId)
                 .orElseThrow(() -> new ResourceNotFoundException("Child", childId)));
@@ -46,6 +49,7 @@ public class MilestoneServiceImpl implements MilestoneService {
     @Override
     @PreAuthorize("@milestoneSecurity.isOwner(#milestoneId, #childId, authentication.name)")
     public MilestoneResponse updateMilestone(Long childId, Long milestoneId, MilestoneRequest request) {
+        log.info("Updating milestone id: {}", milestoneId);
         Milestone milestone = milestoneRepository.findById(milestoneId)
                 .orElseThrow(() -> new ResourceNotFoundException("Milestone", milestoneId));
         milestoneMapper.updateEntity(request, milestone);
@@ -55,6 +59,7 @@ public class MilestoneServiceImpl implements MilestoneService {
     @Override
     @PreAuthorize("@milestoneSecurity.isOwner(#milestoneId, #childId, authentication.name)")
     public void deleteMilestone(Long childId, Long milestoneId) {
+        log.info("Deleting milestone id: {}", milestoneId);
         milestoneRepository.delete(milestoneRepository.findById(milestoneId)
                 .orElseThrow(() -> new ResourceNotFoundException("Milestone", milestoneId)));
     }

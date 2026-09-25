@@ -10,12 +10,14 @@ import com.familyhealth.api.model.User;
 import com.familyhealth.api.repository.ChildRepository;
 import com.familyhealth.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChildServiceImpl implements ChildService {
@@ -38,14 +40,19 @@ public class ChildServiceImpl implements ChildService {
 
     @Override
     public ChildResponse createChild(ChildRequest request) {
+        User user = getCurrentUser();
+        log.info("Creating child '{}' for user: {}", request.getFirstName(), user.getEmail());
         Child child = childMapper.toEntity(request);
-        child.setUser(getCurrentUser());
-        return childMapper.toResponse(childRepository.save(child));
+        child.setUser(user);
+        ChildResponse response = childMapper.toResponse(childRepository.save(child));
+        log.debug("Child created with id: {}", response.getId());
+        return response;
     }
 
     @Override
     @PreAuthorize("@childSecurity.isOwner(#id, authentication.name)")
     public ChildResponse updateChild(Long id, ChildRequest request) {
+        log.info("Updating child id: {}", id);
         Child child = childRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Child", id));
         childMapper.updateEntity(request, child);
@@ -55,6 +62,7 @@ public class ChildServiceImpl implements ChildService {
     @Override
     @PreAuthorize("@childSecurity.isOwner(#id, authentication.name)")
     public void deleteChild(Long id) {
+        log.info("Deleting child id: {}", id);
         childRepository.delete(childRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Child", id)));
     }

@@ -10,12 +10,14 @@ import com.familyhealth.api.repository.ChildRepository;
 import com.familyhealth.api.repository.ReminderRepository;
 import com.familyhealth.api.specification.ReminderSpecification;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReminderServiceImpl implements ReminderService {
@@ -33,6 +35,7 @@ public class ReminderServiceImpl implements ReminderService {
     @Override
     @PreAuthorize("@childSecurity.isOwner(#childId, authentication.name)")
     public ReminderResponse createReminder(Long childId, ReminderRequest request) {
+        log.info("Creating reminder '{}' for child id: {}", request.getTitle(), childId);
         Reminder reminder = reminderMapper.toEntity(request);
         reminder.setChild(childRepository.findById(childId)
                 .orElseThrow(() -> new ResourceNotFoundException("Child", childId)));
@@ -42,6 +45,7 @@ public class ReminderServiceImpl implements ReminderService {
     @Override
     @PreAuthorize("@reminderSecurity.isOwner(#reminderId, #childId, authentication.name)")
     public ReminderResponse updateReminder(Long childId, Long reminderId, ReminderRequest request) {
+        log.info("Updating reminder id: {}", reminderId);
         Reminder reminder = reminderRepository.findById(reminderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Reminder", reminderId));
         reminderMapper.updateEntity(request, reminder);
@@ -51,6 +55,7 @@ public class ReminderServiceImpl implements ReminderService {
     @Override
     @PreAuthorize("@reminderSecurity.isOwner(#reminderId, #childId, authentication.name)")
     public void deleteReminder(Long childId, Long reminderId) {
+        log.info("Deleting reminder id: {}", reminderId);
         reminderRepository.delete(reminderRepository.findById(reminderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Reminder", reminderId)));
     }

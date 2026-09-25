@@ -7,11 +7,13 @@ import com.familyhealth.api.mapper.UserMapper;
 import com.familyhealth.api.model.User;
 import com.familyhealth.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -24,6 +26,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public String register(RegisterRequest request) {
+        log.info("Registering user: {}", request.getEmail());
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateEmailException(request.getEmail());
         }
@@ -37,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public String login(LoginRequest request) {
+        log.info("Login attempt: {}", request.getEmail());
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
@@ -44,6 +48,7 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow();
 
+        log.info("Login successful: {}", request.getEmail());
         return jwtService.generateToken(user);
     }
 }

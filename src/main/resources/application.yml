@@ -16,3 +16,9 @@ server:
 jwt:
   secret: ${JWT_SECRET:change-me-in-production-must-be-at-least-32-chars!!}
   expiration-ms: 86400000
+
+logging:
+  level:
+    com.familyhealth.api: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: INFO

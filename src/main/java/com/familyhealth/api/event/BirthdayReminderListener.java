@@ -4,9 +4,11 @@ import com.familyhealth.api.model.Child;
 import com.familyhealth.api.model.Reminder;
 import com.familyhealth.api.repository.ReminderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class BirthdayReminderListener {
@@ -21,5 +23,7 @@ public class BirthdayReminderListener {
                 .title(child.getFirstName() + "'s first birthday")
                 .dueDate(child.getDateOfBirth().plusYears(1))
                 .build());
+        log.info("Birthday reminder created for child '{}' (due {})",
+                child.getFirstName(), child.getDateOfBirth().plusYears(1));
     }
 }

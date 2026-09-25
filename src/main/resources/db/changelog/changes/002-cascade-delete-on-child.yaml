@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-cascade-delete-milestones-on-child
+      author: familyhealth
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: milestones
+            constraintName: fk_milestones_child_id
+        - addForeignKeyConstraint:
+            baseTableName: milestones
+            baseColumnNames: child_id
+            referencedTableName: children
+            referencedColumnNames: id
+            constraintName: fk_milestones_child_id
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 002-cascade-delete-reminders-on-child
+      author: familyhealth
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: reminders
+            constraintName: fk_reminders_child_id
+        - addForeignKeyConstraint:
+            baseTableName: reminders
+            baseColumnNames: child_id
+            referencedTableName: children
+            referencedColumnNames: id
+            constraintName: fk_reminders_child_id
+            onDelete: CASCADE

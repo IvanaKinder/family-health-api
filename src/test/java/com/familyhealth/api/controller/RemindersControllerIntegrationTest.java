@@ -56,19 +56,20 @@ class RemindersControllerIntegrationTest {
     }
 
     @Test
-    void listReminders_returnsEmptyPage() throws Exception {
+    void listReminders_returnsDefaultBirthdayReminder() throws Exception {
         mockMvc.perform(get(remindersUrl(childId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.content.length()").value(0))
-                .andExpect(jsonPath("$.totalElements").value(0));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].dueDate").value("2021-03-10"));
     }
 
     @Test
     void createReminder_returns201() throws Exception {
         mockMvc.perform(post(remindersUrl(childId))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validReminderPayload())))
+                        .content(objectMapper.writeValueAsString(Map.of("title", "Dentist", "dueDate", "2024-03-15"))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Dentist"))
                 .andExpect(jsonPath("$.id").isNumber());
@@ -76,7 +77,7 @@ class RemindersControllerIntegrationTest {
 
     @Test
     void updateReminder_returns200() throws Exception {
-        long reminderId = createReminder();
+        long reminderId = createReminderWithDate("2024-03-15");
 
         mockMvc.perform(put(remindersUrl(childId) + "/" + reminderId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -87,7 +88,7 @@ class RemindersControllerIntegrationTest {
 
     @Test
     void deleteReminder_returns204() throws Exception {
-        long reminderId = createReminder();
+        long reminderId = createReminderWithDate("2024-03-15");
 
         mockMvc.perform(delete(remindersUrl(childId) + "/" + reminderId))
                 .andExpect(status().isNoContent());
@@ -125,10 +126,11 @@ class RemindersControllerIntegrationTest {
         createReminderWithDate("2024-03-15");
         createReminderWithDate("2024-04-01");
 
+        // birthday reminder (2021-03-10) is also on or before the toDate
         mockMvc.perform(get(remindersUrl(childId)).param("toDate", "2024-03-15"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(2))
-                .andExpect(jsonPath("$.totalElements").value(2));
+                .andExpect(jsonPath("$.content.length()").value(3))
+                .andExpect(jsonPath("$.totalElements").value(3));
     }
 
     @Test
@@ -152,23 +154,12 @@ class RemindersControllerIntegrationTest {
         return "/api/v1/children/" + cId + "/reminders";
     }
 
-    private Map<String, String> validReminderPayload() {
-        return Map.of("title", "Dentist", "dueDate", "2024-03-15");
-    }
-
-    private long createReminder() throws Exception {
+    private long createReminderWithDate(String dueDate) throws Exception {
         MvcResult result = mockMvc.perform(post(remindersUrl(childId))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(validReminderPayload())))
+                        .content(objectMapper.writeValueAsString(Map.of("title", "Reminder", "dueDate", dueDate))))
                 .andExpect(status().isCreated())
                 .andReturn();
         return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asLong();
-    }
-
-    private void createReminderWithDate(String dueDate) throws Exception {
-        mockMvc.perform(post(remindersUrl(childId))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("title", "Reminder", "dueDate", dueDate))))
-                .andExpect(status().isCreated());
     }
 }

@@ -12,6 +12,7 @@ import com.familyhealth.api.specification.ReminderSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ import java.time.LocalDate;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ReminderServiceImpl implements ReminderService {
 
     private final ReminderRepository reminderRepository;
@@ -33,6 +35,7 @@ public class ReminderServiceImpl implements ReminderService {
     }
 
     @Override
+    @Transactional
     @PreAuthorize("@childSecurity.isOwner(#childId, authentication.name)")
     public ReminderResponse createReminder(Long childId, ReminderRequest request) {
         log.info("Creating reminder '{}' for child id: {}", request.getTitle(), childId);
@@ -43,6 +46,7 @@ public class ReminderServiceImpl implements ReminderService {
     }
 
     @Override
+    @Transactional
     @PreAuthorize("@reminderSecurity.isOwner(#reminderId, #childId, authentication.name)")
     public ReminderResponse updateReminder(Long childId, Long reminderId, ReminderRequest request) {
         log.info("Updating reminder id: {}", reminderId);
@@ -53,6 +57,7 @@ public class ReminderServiceImpl implements ReminderService {
     }
 
     @Override
+    @Transactional
     @PreAuthorize("@reminderSecurity.isOwner(#reminderId, #childId, authentication.name)")
     public void deleteReminder(Long childId, Long reminderId) {
         log.info("Deleting reminder id: {}", reminderId);

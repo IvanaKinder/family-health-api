@@ -47,11 +47,12 @@ class ChildrenControllerIntegrationTest {
     }
 
     @Test
-    void listChildren_authenticated_returnsEmptyList() throws Exception {
+    void listChildren_authenticated_returnsEmptyPage() throws Exception {
         mockMvc.perform(get(CHILDREN_URL))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0));
     }
 
     @Test

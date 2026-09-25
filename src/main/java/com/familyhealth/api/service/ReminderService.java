@@ -1,6 +1,7 @@
 package com.familyhealth.api.service;
 
 import com.familyhealth.api.exception.ResourceNotFoundException;
+import com.familyhealth.api.generated.model.ReminderPage;
 import com.familyhealth.api.generated.model.ReminderRequest;
 import com.familyhealth.api.generated.model.ReminderResponse;
 import com.familyhealth.api.mapper.ReminderMapper;
@@ -9,11 +10,11 @@ import com.familyhealth.api.repository.ChildRepository;
 import com.familyhealth.api.repository.ReminderRepository;
 import com.familyhealth.api.specification.ReminderSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,9 +25,8 @@ public class ReminderService {
     private final ChildRepository childRepository;
 
     @PreAuthorize("@childSecurity.isOwner(#childId, authentication.name)")
-    public List<ReminderResponse> listReminders(Long childId, LocalDate fromDate, LocalDate toDate) {
-        return reminderRepository.findAll(new ReminderSpecification(childId, fromDate, toDate))
-                .stream().map(reminderMapper::toResponse).toList();
+    public ReminderPage listReminders(Long childId, LocalDate fromDate, LocalDate toDate, Pageable pageable) {
+        return reminderMapper.toPage(reminderRepository.findAll(new ReminderSpecification(childId, fromDate, toDate), pageable));
     }
 
     @PreAuthorize("@childSecurity.isOwner(#childId, authentication.name)")

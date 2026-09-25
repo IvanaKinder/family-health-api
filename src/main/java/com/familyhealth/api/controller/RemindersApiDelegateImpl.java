@@ -1,16 +1,17 @@
 package com.familyhealth.api.controller;
 
 import com.familyhealth.api.generated.api.RemindersApiDelegate;
+import com.familyhealth.api.generated.model.ReminderPage;
 import com.familyhealth.api.generated.model.ReminderRequest;
 import com.familyhealth.api.generated.model.ReminderResponse;
 import com.familyhealth.api.service.ReminderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,8 +20,8 @@ public class RemindersApiDelegateImpl implements RemindersApiDelegate {
     private final ReminderService reminderService;
 
     @Override
-    public ResponseEntity<List<ReminderResponse>> listReminders(Long childId, LocalDate fromDate, LocalDate toDate) {
-        return ResponseEntity.ok(reminderService.listReminders(childId, fromDate, toDate));
+    public ResponseEntity<ReminderPage> listReminders(Long childId, LocalDate fromDate, LocalDate toDate, Integer page, Integer size) {
+        return ResponseEntity.ok(reminderService.listReminders(childId, fromDate, toDate, PageRequest.of(page, size)));
     }
 
     @Override

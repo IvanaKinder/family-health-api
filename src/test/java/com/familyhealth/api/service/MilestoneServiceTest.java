@@ -15,6 +15,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -23,6 +26,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -51,12 +55,14 @@ class MilestoneServiceTest {
 
     @Test
     void listMilestones_returnsMilestonesForChild() {
-        when(milestoneRepository.findAllByChildId(10L)).thenReturn(List.of(milestone));
+        Pageable pageable = PageRequest.of(0, 20);
+        when(milestoneRepository.findAllByChildId(eq(10L), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(milestone), pageable, 1));
 
-        List<MilestoneResponse> result = milestoneService.listMilestones(10L);
+        var result = milestoneService.listMilestones(10L, pageable);
 
-        assertThat(result).hasSize(1);
-        assertThat(result.getFirst().getTitle()).isEqualTo("First steps");
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().getTitle()).isEqualTo("First steps");
+        assertThat(result.getTotalElements()).isEqualTo(1L);
     }
 
     @Test

@@ -51,11 +51,12 @@ class MilestonesControllerIntegrationTest {
     }
 
     @Test
-    void listMilestones_returnsEmptyList() throws Exception {
+    void listMilestones_returnsEmptyPage() throws Exception {
         mockMvc.perform(get(milestonesUrl(childId)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0));
     }
 
     @Test

@@ -14,6 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -22,6 +25,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,23 +57,26 @@ class ChildServiceTest {
 
     @Test
     void listChildren_returnsAllChildrenForCurrentUser() {
+        Pageable pageable = PageRequest.of(0, 20);
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
-        when(childRepository.findAllByUser(user)).thenReturn(List.of(child));
+        when(childRepository.findAllByUser(eq(user), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(child), pageable, 1));
 
-        List<ChildResponse> result = childService.listChildren();
+        var result = childService.listChildren(pageable);
 
-        assertThat(result).hasSize(1);
-        assertThat(result.getFirst().getFirstName()).isEqualTo("Emma");
-        assertThat(result.getFirst().getLastName()).isEqualTo("Doe");
-        verify(childRepository).findAllByUser(user);
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().getFirstName()).isEqualTo("Emma");
+        assertThat(result.getContent().getFirst().getLastName()).isEqualTo("Doe");
+        assertThat(result.getTotalElements()).isEqualTo(1L);
+        verify(childRepository).findAllByUser(eq(user), any(Pageable.class));
     }
 
     @Test
-    void listChildren_whenNoChildren_returnsEmptyList() {
+    void listChildren_whenNoChildren_returnsEmptyPage() {
+        Pageable pageable = PageRequest.of(0, 20);
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
-        when(childRepository.findAllByUser(user)).thenReturn(List.of());
+        when(childRepository.findAllByUser(eq(user), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(), pageable, 0));
 
-        assertThat(childService.listChildren()).isEmpty();
+        assertThat(childService.listChildren(pageable).getContent()).isEmpty();
     }
 
     @Test

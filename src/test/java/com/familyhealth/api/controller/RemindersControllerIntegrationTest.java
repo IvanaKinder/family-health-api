@@ -51,11 +51,12 @@ class RemindersControllerIntegrationTest {
     }
 
     @Test
-    void listReminders_returnsEmptyList() throws Exception {
+    void listReminders_returnsEmptyPage() throws Exception {
         mockMvc.perform(get(remindersUrl(childId)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0));
     }
 
     @Test
@@ -109,7 +110,8 @@ class RemindersControllerIntegrationTest {
 
         mockMvc.perform(get(remindersUrl(childId)).param("fromDate", "2024-03-15"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.totalElements").value(2));
     }
 
     @Test
@@ -120,7 +122,8 @@ class RemindersControllerIntegrationTest {
 
         mockMvc.perform(get(remindersUrl(childId)).param("toDate", "2024-03-15"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.totalElements").value(2));
     }
 
     @Test
@@ -133,8 +136,9 @@ class RemindersControllerIntegrationTest {
                         .param("fromDate", "2024-03-01")
                         .param("toDate", "2024-03-31"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].dueDate").value("2024-03-15"));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].dueDate").value("2024-03-15"));
     }
 
     // --- helpers ---

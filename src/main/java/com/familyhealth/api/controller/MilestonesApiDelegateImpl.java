@@ -1,15 +1,15 @@
 package com.familyhealth.api.controller;
 
 import com.familyhealth.api.generated.api.MilestonesApiDelegate;
+import com.familyhealth.api.generated.model.MilestonePage;
 import com.familyhealth.api.generated.model.MilestoneRequest;
 import com.familyhealth.api.generated.model.MilestoneResponse;
 import com.familyhealth.api.service.MilestoneService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -18,8 +18,8 @@ public class MilestonesApiDelegateImpl implements MilestonesApiDelegate {
     private final MilestoneService milestoneService;
 
     @Override
-    public ResponseEntity<List<MilestoneResponse>> listMilestones(Long childId) {
-        return ResponseEntity.ok(milestoneService.listMilestones(childId));
+    public ResponseEntity<MilestonePage> listMilestones(Long childId, Integer page, Integer size) {
+        return ResponseEntity.ok(milestoneService.listMilestones(childId, PageRequest.of(page, size)));
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.familyhealth.api.service;
 
 import com.familyhealth.api.exception.ResourceNotFoundException;
+import com.familyhealth.api.generated.model.ChildPage;
 import com.familyhealth.api.generated.model.ChildRequest;
 import com.familyhealth.api.generated.model.ChildResponse;
 import com.familyhealth.api.mapper.ChildMapper;
@@ -9,12 +10,11 @@ import com.familyhealth.api.model.User;
 import com.familyhealth.api.repository.ChildRepository;
 import com.familyhealth.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,10 +24,8 @@ public class ChildService {
     private final ChildMapper childMapper;
     private final UserRepository userRepository;
 
-    public List<ChildResponse> listChildren() {
-        return childRepository.findAllByUser(getCurrentUser()).stream()
-                .map(childMapper::toResponse)
-                .toList();
+    public ChildPage listChildren(Pageable pageable) {
+        return childMapper.toPage(childRepository.findAllByUser(getCurrentUser(), pageable));
     }
 
     @PreAuthorize("@childSecurity.isOwner(#id, authentication.name)")

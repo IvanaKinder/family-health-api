@@ -16,6 +16,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -52,12 +55,15 @@ class ReminderServiceTest {
 
     @Test
     void listReminders_noFilter_returnsAllRemindersForChild() {
-        when(reminderRepository.findAll(any(ReminderSpecification.class))).thenReturn(List.of(reminder));
+        Pageable pageable = PageRequest.of(0, 20);
+        when(reminderRepository.findAll(any(ReminderSpecification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(reminder), pageable, 1));
 
-        List<ReminderResponse> result = reminderService.listReminders(10L, null, null);
+        var result = reminderService.listReminders(10L, null, null, pageable);
 
-        assertThat(result).hasSize(1);
-        assertThat(result.getFirst().getTitle()).isEqualTo("Dentist");
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().getTitle()).isEqualTo("Dentist");
+        assertThat(result.getTotalElements()).isEqualTo(1L);
     }
 
     @Test

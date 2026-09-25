@@ -1,15 +1,15 @@
 package com.familyhealth.api.controller;
 
 import com.familyhealth.api.generated.api.ChildrenApiDelegate;
+import com.familyhealth.api.generated.model.ChildPage;
 import com.familyhealth.api.generated.model.ChildRequest;
 import com.familyhealth.api.generated.model.ChildResponse;
 import com.familyhealth.api.service.ChildService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -18,8 +18,8 @@ public class ChildrenApiDelegateImpl implements ChildrenApiDelegate {
     private final ChildService childService;
 
     @Override
-    public ResponseEntity<List<ChildResponse>> listChildren() {
-        return ResponseEntity.ok(childService.listChildren());
+    public ResponseEntity<ChildPage> listChildren(Integer page, Integer size) {
+        return ResponseEntity.ok(childService.listChildren(PageRequest.of(page, size)));
     }
 
     @Override

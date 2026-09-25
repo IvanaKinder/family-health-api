@@ -1,6 +1,7 @@
 package com.familyhealth.api.service;
 
 import com.familyhealth.api.exception.ResourceNotFoundException;
+import com.familyhealth.api.generated.model.MilestonePage;
 import com.familyhealth.api.generated.model.MilestoneRequest;
 import com.familyhealth.api.generated.model.MilestoneResponse;
 import com.familyhealth.api.mapper.MilestoneMapper;
@@ -8,10 +9,9 @@ import com.familyhealth.api.model.Milestone;
 import com.familyhealth.api.repository.ChildRepository;
 import com.familyhealth.api.repository.MilestoneRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,10 +22,8 @@ public class MilestoneService {
     private final ChildRepository childRepository;
 
     @PreAuthorize("@childSecurity.isOwner(#childId, authentication.name)")
-    public List<MilestoneResponse> listMilestones(Long childId) {
-        return milestoneRepository.findAllByChildId(childId).stream()
-                .map(milestoneMapper::toResponse)
-                .toList();
+    public MilestonePage listMilestones(Long childId, Pageable pageable) {
+        return milestoneMapper.toPage(milestoneRepository.findAllByChildId(childId, pageable));
     }
 
     @PreAuthorize("@childSecurity.isOwner(#childId, authentication.name)")

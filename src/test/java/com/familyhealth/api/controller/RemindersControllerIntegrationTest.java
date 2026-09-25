@@ -6,6 +6,7 @@ import com.familyhealth.api.model.User;
 import com.familyhealth.api.repository.ChildRepository;
 import com.familyhealth.api.repository.ReminderRepository;
 import com.familyhealth.api.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,13 +42,17 @@ class RemindersControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        reminderRepository.deleteAll();
-        childRepository.deleteAll();
-        userRepository.deleteAll();
         User user = userRepository.save(User.builder()
                 .email("user@example.com").password("test").firstName("Test").lastName("User").build());
         childId = childRepository.save(Child.builder()
                 .user(user).firstName("Emma").lastName("Doe").dateOfBirth(LocalDate.of(2020, 3, 10)).build()).getId();
+    }
+
+    @AfterEach
+    void tearDown() {
+        reminderRepository.deleteAll();
+        childRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test

@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.familyhealth.api.model.Child;
 import com.familyhealth.api.model.User;
 import com.familyhealth.api.repository.ChildRepository;
+import com.familyhealth.api.repository.MilestoneRepository;
+import com.familyhealth.api.repository.ReminderRepository;
 import com.familyhealth.api.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,16 +37,24 @@ class ChildrenControllerIntegrationTest {
     @Autowired private ObjectMapper objectMapper;
     @Autowired private UserRepository userRepository;
     @Autowired private ChildRepository childRepository;
+    @Autowired private MilestoneRepository milestoneRepository;
+    @Autowired private ReminderRepository reminderRepository;
 
     private static final String CHILDREN_URL = "/api/v1/children";
     private User user;
 
     @BeforeEach
     void setUp() {
-        childRepository.deleteAll();
-        userRepository.deleteAll();
         user = userRepository.save(User.builder()
                 .email("user@example.com").password("test").firstName("Test").lastName("User").build());
+    }
+
+    @AfterEach
+    void tearDown() {
+        reminderRepository.deleteAll();
+        milestoneRepository.deleteAll();
+        childRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test

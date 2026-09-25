@@ -37,7 +37,7 @@ class MilestoneServiceTest {
     @Mock private ChildRepository childRepository;
 
     private final MilestoneMapper milestoneMapper = Mappers.getMapper(MilestoneMapper.class);
-    private MilestoneService milestoneService;
+    private MilestoneServiceImpl milestoneService;
 
     private Child child;
     private Milestone milestone;
@@ -45,7 +45,7 @@ class MilestoneServiceTest {
 
     @BeforeEach
     void setUp() {
-        milestoneService = new MilestoneService(milestoneRepository, milestoneMapper, childRepository);
+        milestoneService = new MilestoneServiceImpl(milestoneRepository, milestoneMapper, childRepository);
 
         User user = User.builder().id(1L).email("user@example.com").build();
         child = Child.builder().id(10L).user(user).firstName("Emma").build();

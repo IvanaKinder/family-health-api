@@ -36,7 +36,7 @@ class ChildServiceTest {
     @Mock private UserRepository userRepository;
 
     private final ChildMapper childMapper = Mappers.getMapper(ChildMapper.class);
-    private ChildService childService;
+    private ChildServiceImpl childService;
 
     private User user;
     private Child child;
@@ -44,7 +44,7 @@ class ChildServiceTest {
 
     @BeforeEach
     void setUp() {
-        childService = new ChildService(childRepository, childMapper, userRepository);
+        childService = new ChildServiceImpl(childRepository, childMapper, userRepository);
 
         user = User.builder().id(1L).email("user@example.com").build();
         child = Child.builder().id(10L).user(user).firstName("Emma").lastName("Doe").build();

@@ -37,7 +37,7 @@ class ReminderServiceTest {
     @Mock private ChildRepository childRepository;
 
     private final ReminderMapper reminderMapper = Mappers.getMapper(ReminderMapper.class);
-    private ReminderService reminderService;
+    private ReminderServiceImpl reminderService;
 
     private Child child;
     private Reminder reminder;
@@ -45,7 +45,7 @@ class ReminderServiceTest {
 
     @BeforeEach
     void setUp() {
-        reminderService = new ReminderService(reminderRepository, reminderMapper, childRepository);
+        reminderService = new ReminderServiceImpl(reminderRepository, reminderMapper, childRepository);
 
         User user = User.builder().id(1L).email("user@example.com").build();
         child = Child.builder().id(10L).user(user).firstName("Emma").build();

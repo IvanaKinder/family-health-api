@@ -1,14 +1,14 @@
 package com.familyhealth.api.service;
 
 import com.familyhealth.api.exception.ResourceNotFoundException;
-import com.familyhealth.api.generated.model.ReminderRequest;
-import com.familyhealth.api.generated.model.ReminderResponse;
 import com.familyhealth.api.mapper.ReminderMapper;
 import com.familyhealth.api.model.Child;
 import com.familyhealth.api.model.Reminder;
 import com.familyhealth.api.model.User;
 import com.familyhealth.api.repository.ChildRepository;
 import com.familyhealth.api.repository.ReminderRepository;
+import com.familyhealth.api.service.model.ReminderCommand;
+import com.familyhealth.api.service.model.ReminderView;
 import com.familyhealth.api.specification.ReminderSpecification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,7 +42,7 @@ class ReminderServiceTest {
 
     private Child child;
     private Reminder reminder;
-    private ReminderRequest reminderRequest;
+    private ReminderCommand reminderCommand;
 
     @BeforeEach
     void setUp() {
@@ -50,7 +51,7 @@ class ReminderServiceTest {
         User user = User.builder().id(1L).email("user@example.com").build();
         child = Child.builder().id(10L).user(user).firstName("Emma").build();
         reminder = Reminder.builder().id(30L).child(child).title("Dentist").dueDate(LocalDate.of(2024, 3, 15)).build();
-        reminderRequest = new ReminderRequest().title("Dentist").dueDate(LocalDate.of(2024, 3, 15));
+        reminderCommand = new ReminderCommand("Dentist", LocalDate.of(2024, 3, 15), null);
     }
 
     @Test
@@ -59,15 +60,15 @@ class ReminderServiceTest {
         when(reminderRepository.findAll(any(ReminderSpecification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(reminder), pageable, 1));
 
-        var result = reminderService.listReminders(10L, null, null, pageable);
+        Page<ReminderView> result = reminderService.listReminders(10L, null, null, pageable);
 
         assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().getFirst().getTitle()).isEqualTo("Dentist");
+        assertThat(result.getContent().getFirst().title()).isEqualTo("Dentist");
         assertThat(result.getTotalElements()).isEqualTo(1L);
     }
 
     @Test
-    void createReminder_savesWithChildAndReturnsResponse() {
+    void createReminder_savesWithChildAndReturnsView() {
         when(childRepository.findById(10L)).thenReturn(Optional.of(child));
         when(reminderRepository.save(any(Reminder.class))).thenAnswer(inv -> {
             Reminder saved = inv.getArgument(0);
@@ -75,9 +76,9 @@ class ReminderServiceTest {
             return saved;
         });
 
-        ReminderResponse result = reminderService.createReminder(10L, reminderRequest);
+        ReminderView result = reminderService.createReminder(10L, reminderCommand);
 
-        assertThat(result.getTitle()).isEqualTo("Dentist");
+        assertThat(result.title()).isEqualTo("Dentist");
         verify(reminderRepository).save(any(Reminder.class));
     }
 
@@ -86,10 +87,10 @@ class ReminderServiceTest {
         when(reminderRepository.findById(30L)).thenReturn(Optional.of(reminder));
         when(reminderRepository.save(reminder)).thenReturn(reminder);
 
-        ReminderRequest updateRequest = new ReminderRequest().title("Eye doctor").dueDate(LocalDate.of(2024, 4, 1));
-        ReminderResponse result = reminderService.updateReminder(10L, 30L, updateRequest);
+        ReminderCommand updateCommand = new ReminderCommand("Eye doctor", LocalDate.of(2024, 4, 1), null);
+        ReminderView result = reminderService.updateReminder(10L, 30L, updateCommand);
 
-        assertThat(result.getTitle()).isEqualTo("Eye doctor");
+        assertThat(result.title()).isEqualTo("Eye doctor");
         verify(reminderRepository).save(reminder);
     }
 
@@ -97,7 +98,7 @@ class ReminderServiceTest {
     void updateReminder_reminderNotFound_throwsResourceNotFoundException() {
         when(reminderRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> reminderService.updateReminder(10L, 999L, reminderRequest))
+        assertThatThrownBy(() -> reminderService.updateReminder(10L, 999L, reminderCommand))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("999");
     }

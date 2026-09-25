@@ -1,19 +1,19 @@
 package com.familyhealth.api.service;
 
-import com.familyhealth.api.generated.model.ChildPage;
-import com.familyhealth.api.generated.model.ChildRequest;
-import com.familyhealth.api.generated.model.ChildResponse;
+import com.familyhealth.api.service.model.ChildCommand;
+import com.familyhealth.api.service.model.ChildView;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface ChildService {
 
-    ChildPage listChildren(Pageable pageable);
+    Page<ChildView> listChildren(Pageable pageable);
 
-    ChildResponse getChild(Long id);
+    ChildView getChild(Long id);
 
-    ChildResponse createChild(ChildRequest request);
+    ChildView createChild(ChildCommand command);
 
-    ChildResponse updateChild(Long id, ChildRequest request);
+    ChildView updateChild(Long id, ChildCommand command);
 
     void deleteChild(Long id);
 }

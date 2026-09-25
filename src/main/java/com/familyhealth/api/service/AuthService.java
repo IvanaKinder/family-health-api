@@ -1,11 +1,11 @@
 package com.familyhealth.api.service;
 
-import com.familyhealth.api.generated.model.LoginRequest;
-import com.familyhealth.api.generated.model.RegisterRequest;
+import com.familyhealth.api.service.model.LoginCommand;
+import com.familyhealth.api.service.model.RegisterCommand;
 
 public interface AuthService {
 
-    String register(RegisterRequest request);
+    String register(RegisterCommand command);
 
-    String login(LoginRequest request);
+    String login(LoginCommand command);
 }

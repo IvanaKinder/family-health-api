@@ -11,12 +11,14 @@ import com.familyhealth.api.repository.MilestoneRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MilestoneServiceImpl implements MilestoneService {
 
     private final MilestoneRepository milestoneRepository;
@@ -37,6 +39,7 @@ public class MilestoneServiceImpl implements MilestoneService {
     }
 
     @Override
+    @Transactional
     @PreAuthorize("@childSecurity.isOwner(#childId, authentication.name)")
     public MilestoneResponse createMilestone(Long childId, MilestoneRequest request) {
         log.info("Creating milestone '{}' for child id: {}", request.getTitle(), childId);
@@ -47,6 +50,7 @@ public class MilestoneServiceImpl implements MilestoneService {
     }
 
     @Override
+    @Transactional
     @PreAuthorize("@milestoneSecurity.isOwner(#milestoneId, #childId, authentication.name)")
     public MilestoneResponse updateMilestone(Long childId, Long milestoneId, MilestoneRequest request) {
         log.info("Updating milestone id: {}", milestoneId);
@@ -57,6 +61,7 @@ public class MilestoneServiceImpl implements MilestoneService {
     }
 
     @Override
+    @Transactional
     @PreAuthorize("@milestoneSecurity.isOwner(#milestoneId, #childId, authentication.name)")
     public void deleteMilestone(Long childId, Long milestoneId) {
         log.info("Deleting milestone id: {}", milestoneId);

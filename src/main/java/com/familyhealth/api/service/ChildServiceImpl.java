@@ -12,6 +12,7 @@ import com.familyhealth.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ChildServiceImpl implements ChildService {
 
     private final ChildRepository childRepository;
@@ -39,6 +41,7 @@ public class ChildServiceImpl implements ChildService {
     }
 
     @Override
+    @Transactional
     public ChildResponse createChild(ChildRequest request) {
         User user = getCurrentUser();
         log.info("Creating child '{}' for user: {}", request.getFirstName(), user.getEmail());
@@ -50,6 +53,7 @@ public class ChildServiceImpl implements ChildService {
     }
 
     @Override
+    @Transactional
     @PreAuthorize("@childSecurity.isOwner(#id, authentication.name)")
     public ChildResponse updateChild(Long id, ChildRequest request) {
         log.info("Updating child id: {}", id);
@@ -60,6 +64,7 @@ public class ChildServiceImpl implements ChildService {
     }
 
     @Override
+    @Transactional
     @PreAuthorize("@childSecurity.isOwner(#id, authentication.name)")
     public void deleteChild(Long id) {
         log.info("Deleting child id: {}", id);

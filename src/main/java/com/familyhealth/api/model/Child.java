@@ -1,8 +1,10 @@
 package com.familyhealth.api.model;
 
+import com.familyhealth.api.event.ChildCreatedEvent;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.domain.AbstractAggregateRoot;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,7 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Child {
+public class Child extends AbstractAggregateRoot<Child> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,4 +44,9 @@ public class Child {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @PostPersist
+    private void registerCreatedEvent() {
+        registerEvent(new ChildCreatedEvent(this));
+    }
 }

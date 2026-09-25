@@ -18,4 +18,4 @@ jobs:
           cache: maven
       - run: mvn clean verify
         env:
-          JWT_SECRET: ci-dummy-secret-for-tests-only
+          JWT_SECRET: ci-dummy-secret-for-tests-only-xx

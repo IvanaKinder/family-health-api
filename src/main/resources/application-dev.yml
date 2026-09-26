@@ -1,3 +1,8 @@
+app:
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/family_health

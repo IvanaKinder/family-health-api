@@ -191,7 +191,7 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>https://raw.githubusercontent.com/IvanaKinder/family-health-spec/main/family-health-api.yaml</inputSpec>
+                            <inputSpec>https://raw.githubusercontent.com/IvanaKinder/family-health-spec/master/family-health-api.yaml</inputSpec>
                             <generatorName>spring</generatorName>
                             <apiPackage>com.familyhealth.api.generated.api</apiPackage>
                             <modelPackage>com.familyhealth.api.generated.model</modelPackage>

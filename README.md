@@ -50,7 +50,7 @@ mvn test
 
 Swagger UI is available at `http://localhost:8080/swagger-ui/index.html` when the app is running.
 
-The OpenAPI spec lives in the [family-health-spec](https://github.com/IvanaKinder/family-health-spec) repo.
+The OpenAPI spec is the source of truth and lives at `src/main/resources/openapi/family-health-api.yaml`.
 
 ## Running the Full Stack (Demo)
 

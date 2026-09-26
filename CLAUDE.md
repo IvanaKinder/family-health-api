@@ -78,9 +78,12 @@ src/main/resources/
 
 ```bash
 # Start PostgreSQL via Docker (required for dev profile)
-docker-compose up -d
+# docker-compose.yml lives in the sibling family-health-compose repo
+cd ../family-health-compose
+docker-compose up -d postgres
 
 # Dev
+cd ../family-health-api
 SPRING_PROFILES_ACTIVE=dev mvn spring-boot:run
 
 # Tests (uses H2, no external DB needed)
@@ -90,12 +93,22 @@ mvn test
 mvn clean install
 ```
 
-### Docker
+### Docker (postgres only, for local dev)
 
 ```bash
-docker-compose up -d    # start PostgreSQL in background
-docker-compose stop     # stop without losing data
-docker-compose down -v  # stop and wipe all data
+# from ../family-health-compose
+docker-compose up -d postgres    # start PostgreSQL in background
+docker-compose stop postgres     # stop without losing data
+docker-compose down -v           # stop and wipe all data
+```
+
+### Full-stack demo (all services)
+
+```bash
+# from ../family-health-compose
+docker-compose up --build   # builds and starts postgres + api + ui
+# UI: http://localhost:3000
+# API: http://localhost:8080
 ```
 
 ## Swagger UI

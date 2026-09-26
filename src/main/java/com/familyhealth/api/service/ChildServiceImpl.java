@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,8 +27,10 @@ public class ChildServiceImpl implements ChildService {
     private final UserRepository userRepository;
 
     @Override
-    public Page<ChildView> listChildren(Pageable pageable) {
-        return childRepository.findAllByUser(getCurrentUser(), pageable).map(childMapper::toView);
+    public Page<ChildView> listChildren(String userEmail, Pageable pageable) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + userEmail));
+        return childRepository.findAllByUser(user, pageable).map(childMapper::toView);
     }
 
     @Override
@@ -41,7 +42,8 @@ public class ChildServiceImpl implements ChildService {
     @Override
     @Transactional
     public ChildView createChild(ChildCommand command) {
-        User user = getCurrentUser();
+        User user = userRepository.findByEmail(command.userEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + command.userEmail()));
         log.info("Creating child '{}' for user: {}", command.firstName(), user.getEmail());
         Child child = childMapper.toEntity(command);
         child.setUser(user);
@@ -66,11 +68,5 @@ public class ChildServiceImpl implements ChildService {
         log.info("Deleting child id: {}", id);
         childRepository.delete(childRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Child", id)));
-    }
-
-    private User getCurrentUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
     }
 }

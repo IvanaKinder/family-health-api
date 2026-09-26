@@ -14,7 +14,11 @@ import org.springframework.data.domain.Page;
 @Mapper(componentModel = "spring")
 public interface ChildMapper {
 
+    @Mapping(target = "userEmail", ignore = true)
     ChildCommand toCommand(ChildRequest request);
+
+    @Mapping(source = "userEmail", target = "userEmail")
+    ChildCommand toCommand(ChildRequest request, String userEmail);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)

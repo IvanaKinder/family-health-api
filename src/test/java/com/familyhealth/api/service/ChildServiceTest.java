@@ -18,8 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,11 +47,7 @@ class ChildServiceTest {
 
         user = User.builder().id(1L).email("user@example.com").build();
         child = Child.builder().id(10L).user(user).firstName("Emma").lastName("Doe").build();
-        childCommand = new ChildCommand("Emma", "Doe", null, null, null);
-
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken("user@example.com", null, List.of())
-        );
+        childCommand = new ChildCommand("user@example.com", "Emma", "Doe", null, null, null);
     }
 
     @Test
@@ -62,7 +56,7 @@ class ChildServiceTest {
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(childRepository.findAllByUser(eq(user), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(child), pageable, 1));
 
-        Page<ChildView> result = childService.listChildren(pageable);
+        Page<ChildView> result = childService.listChildren("user@example.com", pageable);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().getFirst().firstName()).isEqualTo("Emma");
@@ -77,7 +71,7 @@ class ChildServiceTest {
         when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
         when(childRepository.findAllByUser(eq(user), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(), pageable, 0));
 
-        assertThat(childService.listChildren(pageable).getContent()).isEmpty();
+        assertThat(childService.listChildren("user@example.com", pageable).getContent()).isEmpty();
     }
 
     @Test
@@ -120,7 +114,7 @@ class ChildServiceTest {
         when(childRepository.findById(10L)).thenReturn(Optional.of(child));
         when(childRepository.save(child)).thenReturn(child);
 
-        ChildCommand updateCommand = new ChildCommand("Emily", "Doe", null, null, null);
+        ChildCommand updateCommand = new ChildCommand(null, "Emily", "Doe", null, null, null);
         ChildView result = childService.updateChild(10L, updateCommand);
 
         assertThat(result.firstName()).isEqualTo("Emily");

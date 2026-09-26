@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface ChildService {
 
-    Page<ChildView> listChildren(Pageable pageable);
+    Page<ChildView> listChildren(String userEmail, Pageable pageable);
 
     ChildView getChild(Long id);
 
